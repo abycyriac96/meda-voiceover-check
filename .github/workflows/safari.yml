@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        check: [date, agenda]
+        check: [company, galleries, rfq, rental, tourism, community]
     env:
       CHECK: ${{ matrix.check }}
     runs-on: macos-15
@@ -20,7 +20,7 @@ jobs:
       - run: npm install --no-save @guidepup/guidepup@0.40.0
       - run: npx --yes @guidepup/setup@0.29.3 setup --ci
       - run: npx --yes @guidepup/setup@0.29.3 install
-      - run: node safari.mjs
+      - run: node site.mjs
 
 
       - uses: actions/upload-artifact@v7
@@ -28,3 +28,4 @@ jobs:
         with:
           name: safari-${{ matrix.check }}
           path: '*.png'
+
