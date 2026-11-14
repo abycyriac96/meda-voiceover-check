@@ -26,8 +26,9 @@ jobs:
           test -n "$DEVICE"
           xcrun simctl boot "$DEVICE"
           xcrun simctl bootstatus "$DEVICE" -b
-          xcrun simctl openurl "$DEVICE" https://dev.blackhaven-industries.pages.dev/demo/meda/staff/
+          xcrun simctl launch "$DEVICE" com.apple.mobilesafari
           cd ios
           xcodegen generate
           xcodebuild test -scheme SafariSpeech -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO
+
 

@@ -6,6 +6,11 @@ final class SafariSpeech: XCTestCase {
     let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
     safari.activate()
     XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 20))
+    let address = safari.textFields.matching(NSPredicate(format: "identifier CONTAINS[c] 'URL' OR label CONTAINS[c] 'address'")).firstMatch
+    XCTAssertTrue(address.waitForExistence(timeout: 20), safari.debugDescription)
+    address.tap()
+    address.typeText("https://dev.blackhaven-industries.pages.dev/demo/meda/staff/\n")
+    XCTAssertTrue(safari.staticTexts["Staff publishing"].waitForExistence(timeout: 25), safari.debugDescription)
     let voice = XCUIDevice.shared.voiceOverService
     try voice.enable()
     defer { try? voice.disable() }
@@ -21,3 +26,4 @@ final class SafariSpeech: XCTestCase {
     XCTAssertTrue(speech.joined(separator: "\n").localizedCaseInsensitiveContains("Staff publishing"))
   }
 }
+
