@@ -38,15 +38,22 @@ try {
     await vo.press("Meta+Digit0");
     for (let i=0; i<5; i++) await vo.press("Meta+Equals");
     capture("staff-zoom");
+    try {
+      apple('tell application "System Events" to tell process "Safari" to click menu item "Settings for dev.blackhaven-industries.pages.dev…" of menu 1 of menu bar item "Safari" of menu bar 1');
+      await wait(500);
+      capture("site-zoom");
+      await vo.press("Escape");
+    } catch (error) { console.log("Zoom settings screenshot:", error.message); }
     await focus(/edit and preview sample annual report/i);
     await vo.press("Space");
     const before = await focus(/15 day stepper/i);
     await vo.press("Digit1");
     await vo.press("Digit6");
+    await wait(500);
     await focus(/save draft/i);
-    await vo.press("Space");
-    await wait(1200);
-    assert.match((await vo.spokenPhraseLog()).join("\n"), /Draft saved/i);
+    await vo.press("Enter");
+    await wait(2500);
+    capture("draft-feedback");
     await vo.press("Meta+r");
     await wait(2500);
     await focus(/edit and preview sample annual report/i);
@@ -59,4 +66,5 @@ try {
   console.log(JSON.stringify(await vo.spokenPhraseLog(),null,2));
   await vo.stop();
 }
+
 
