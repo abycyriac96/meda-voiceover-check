@@ -45,7 +45,13 @@ with webdriver.Safari() as browser:
     with tempfile.TemporaryDirectory() as folder:
         photo = Path(folder)/'test.png'
         photo.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuoAAAAASUVORK5CYII='))
-        get('#photo').send_keys(str(photo))
+        js("""
+          const input = document.querySelector('#photo');
+          const transfer = new DataTransfer();
+          transfer.items.add(new File([Uint8Array.from(atob(arguments[0]), c=>c.charCodeAt(0))], 'test.png', {type:'image/png'}));
+          input.files = transfer.files;
+          input.dispatchEvent(new Event('change', {bubbles:true}));
+        """, base64.b64encode(photo.read_bytes()).decode())
         print(js('return [...document.querySelectorAll(\"#report-form input,#report-form select,#report-form textarea\")].map(x=>[x.id,x.value,x.validity.valid,x.files?.[0]?.type])'), flush=True)
         get('#report-form button[type=submit]').click()
         print(js('return document.querySelector(\"#form-error\").textContent'), flush=True)
@@ -53,6 +59,7 @@ with webdriver.Safari() as browser:
     get('#success-view [data-go=track]').click()
     get('#track-form button[type=submit]').click()
     assert get('#track-result img').get_attribute('src').startswith('data:image/png;')
+    assert js("return document.querySelector('#track-result img').naturalWidth") == 1
     print('Community upload and tracked photo confirmed', flush=True)
     get('[data-view=staff]').click()
     Select(get('#assign-'+request)).select_by_visible_text('Public works')
@@ -63,5 +70,6 @@ with webdriver.Safari() as browser:
     assert Select(get('#status-'+request)).first_selected_option.text == 'In progress'
     assert get('#queue img').is_displayed()
     print('Staff assignment, status and photo survived reload', flush=True)
+
 
 
