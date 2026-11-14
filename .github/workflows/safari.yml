@@ -1,0 +1,16 @@
+name: Safari VoiceOver
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  safari:
+    runs-on: macos-15
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm install --no-save @guidepup/guidepup@0.40.0
+      - uses: guidepup/setup-action@0.19.0
+      - run: node safari.mjs
