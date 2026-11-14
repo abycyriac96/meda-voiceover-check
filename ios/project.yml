@@ -1,0 +1,35 @@
+name: SafariSpeech
+options:
+  deploymentTarget:
+    iOS: "27.0"
+settings:
+  base:
+    CODE_SIGNING_ALLOWED: "NO"
+    GENERATE_INFOPLIST_FILE: "YES"
+targets:
+  HostApp:
+    type: application
+    platform: iOS
+    sources: [HostApp]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.example.SafariSpeech
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+  SafariSpeechTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: HostApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.example.SafariSpeechTests
+        TEST_TARGET_NAME: HostApp
+schemes:
+  SafariSpeech:
+    build:
+      targets:
+        HostApp: all
+        SafariSpeechTests: all
+    test:
+      targets: [SafariSpeechTests]
