@@ -46,7 +46,9 @@ with webdriver.Safari() as browser:
         photo = Path(folder)/'test.png'
         photo.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuoAAAAASUVORK5CYII='))
         get('#photo').send_keys(str(photo))
+        print(js('return [...document.querySelectorAll(\"#report-form input,#report-form select,#report-form textarea\")].map(x=>[x.id,x.value,x.validity.valid,x.files?.[0]?.type])'), flush=True)
         get('#report-form button[type=submit]').click()
+        print(js('return document.querySelector(\"#form-error\").textContent'), flush=True)
         request = WebDriverWait(browser,10).until(lambda _: get('#success-id').text)
     get('#success-view [data-go=track]').click()
     get('#track-form button[type=submit]').click()
@@ -61,4 +63,5 @@ with webdriver.Safari() as browser:
     assert Select(get('#status-'+request)).first_selected_option.text == 'In progress'
     assert get('#queue img').is_displayed()
     print('Staff assignment, status and photo survived reload', flush=True)
+
 
