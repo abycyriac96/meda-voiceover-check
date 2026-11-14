@@ -1,75 +1,62 @@
+import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { setTimeout as delay } from "node:timers/promises";
-import { voiceOver } from "@guidepup/guidepup";
+import { setTimeout as wait } from "node:timers/promises";
+import { voiceOver as vo } from "@guidepup/guidepup";
 
 const base = "https://dev.blackhaven-industries.pages.dev/demo/meda/";
-const apple = (...lines) => execFileSync("osascript", lines.flatMap(line => ["-e", line]), { encoding: "utf8" }).trim();
+const apple = (...lines) => execFileSync("osascript", lines.flatMap(line => ["-e", line]), {encoding:"utf8"}).trim();
 const visit = async path => {
-  const url = base + path;
-  apple('tell application "Safari" to activate', `tell application "Safari" to open location "${url}"`);
-  await delay(3000);
+  apple('tell application "Safari" to activate', 'tell application "Safari" to make new document with properties {URL:"' + base + path + '"}');
+  await wait(5000);
   console.log(apple('tell application "Safari" to get URL of current tab of front window'));
 };
-
-console.log(apple('tell application "Safari" to get version'));
-await voiceOver.start();
+const focus = async pattern => {
+  for (let i=0; i<32; i++) {
+    await vo.press("Alt+Tab");
+    const phrase = await vo.lastSpokenPhrase();
+    if (pattern.test(phrase)) return phrase;
+  }
+  throw Error("Could not focus " + pattern);
+};
+const capture = name => execFileSync("screencapture", ["-x", name + ".png"]);
+await vo.start();
 try {
-  for (const path of ["samples/meeting-agenda.pdf", "staff/"]) {
-    await visit(path);
-    await voiceOver.clearSpokenPhraseLog();
-    if (path.endsWith(".pdf")) {
-      await voiceOver.navigateNextUntil(/page 1 containing/i, { maxNavigationAttempts: 25 }).catch(console.error);
-      await voiceOver.interact();
-      for (let i = 0; i < 26; i++) await voiceOver.next();
-    } else {
-      await voiceOver.nextHeading();
-    }
-    const speech = await voiceOver.spokenPhraseLog();
-    console.log(JSON.stringify({ path, speech }, null, 2));
-    if (path === "staff/") {
-      await voiceOver.clearSpokenPhraseLog();
-      // Safari page zoom advances through 115, 125, 150, 175, and 200.
-      for (let i = 0; i < 5; i++) await voiceOver.press("Meta+Equals");
-      for (let i = 0; i < 35; i++) {
-        await voiceOver.press("Alt+Tab");
-        const phrase = await voiceOver.lastSpokenPhrase();
-        if (/save draft/i.test(phrase)) {
-          await voiceOver.press("Space");
-          await delay(1000);
-          break;
-        }
+  if (process.env.CHECK === "agenda") {
+    await visit("samples/meeting-agenda.pdf");
+    for (let depth=0; depth<4; depth++) {
+      for (let i=0; i<22; i++) {
+        await vo.next();
+        if (/page 1 containing/i.test(await vo.lastSpokenPhrase())) break;
       }
-      for (let i = 0; i < 24; i++) {
-        await voiceOver.press("Alt+Tab");
-        const phrase = await voiceOver.lastSpokenPhrase();
-        if (/edit and preview sample annual report/i.test(phrase)) {
-          await voiceOver.press("Space");
-          await delay(600);
-          break;
-        }
-      }
-      for (let i = 0; i < 16; i++) {
-        await voiceOver.press("Alt+Tab");
-        const phrase = await voiceOver.lastSpokenPhrase();
-        if (/day stepper/i.test(phrase)) await voiceOver.press("ArrowUp");
-        if (/save draft/i.test(phrase)) {
-          await voiceOver.press("Space");
-          await delay(1500);
-          break;
-        }
-      }
-      console.log(JSON.stringify({ formNavigation: await voiceOver.spokenPhraseLog() }, null, 2));
+      await vo.interact();
+      const speech = (await vo.spokenPhraseLog()).join("\n");
+      if (/Welcome[\s\S]*Discussion[\s\S]*Wrap.up/i.test(speech)) break;
     }
-    if (path === "staff/" && !speech.some(line => /staff publishing/i.test(line))) {
-      process.exitCode = 1;
-    }
+    assert.match((await vo.spokenPhraseLog()).join("\n"), /Welcome[\s\S]*Discussion[\s\S]*Wrap.up/i);
+  } else {
+    await visit("staff/");
+    await vo.press("Meta+Digit0");
+    for (let i=0; i<5; i++) await vo.press("Meta+Equals");
+    capture("staff-zoom");
+    await focus(/edit and preview sample annual report/i);
+    await vo.press("Space");
+    const before = await focus(/15 day stepper/i);
+    await vo.press("Digit1");
+    await vo.press("Digit6");
+    await focus(/save draft/i);
+    await vo.press("Space");
+    await wait(1200);
+    assert.match((await vo.spokenPhraseLog()).join("\n"), /Draft saved/i);
+    await vo.press("Meta+r");
+    await wait(2500);
+    await focus(/edit and preview sample annual report/i);
+    await vo.press("Space");
+    const after = await focus(/16 day stepper/i);
+    console.log({before,after});
+    capture("saved-date");
   }
 } finally {
-  await voiceOver.stop();
+  console.log(JSON.stringify(await vo.spokenPhraseLog(),null,2));
+  await vo.stop();
 }
-
-
-
-
-
 
