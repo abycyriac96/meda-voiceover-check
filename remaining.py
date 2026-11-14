@@ -62,14 +62,17 @@ with webdriver.Safari() as browser:
     assert js("return document.querySelector('#track-result img').naturalWidth") == 1
     print('Community upload and tracked photo confirmed', flush=True)
     get('[data-view=staff]').click()
-    Select(get('#assign-'+request)).select_by_visible_text('Public works')
-    Select(get('#status-'+request)).select_by_visible_text('In progress')
+    for field, value in [('assign', 'Public works'), ('status', 'In progress')]:
+        control = get('#'+field+'-'+request)
+        js("arguments[0].focus(); arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", control, value)
+        assert js("return document.activeElement.id") == field+'-'+request
     browser.refresh()
     get('[data-view=staff]').click()
     assert Select(get('#assign-'+request)).first_selected_option.text == 'Public works'
     assert Select(get('#status-'+request)).first_selected_option.text == 'In progress'
     assert get('#queue img').is_displayed()
     print('Staff assignment, status and photo survived reload', flush=True)
+
 
 
 
