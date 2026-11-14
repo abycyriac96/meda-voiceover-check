@@ -1,32 +1,23 @@
-name: Safari VoiceOver
+name: Remaining accessibility checks
 on: [push, workflow_dispatch]
 permissions:
   contents: read
 jobs:
   safari:
-    strategy:
-      fail-fast: false
-      matrix:
-        check: [community, rental]
-    env:
-      CHECK: ${{ matrix.check }}
     runs-on: macos-15
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-      - run: npm install --no-save @guidepup/guidepup@0.40.0
-      - run: npx --yes @guidepup/setup@0.29.3 setup --ci
-      - run: npx --yes @guidepup/setup@0.29.3 install
-      - run: node site.mjs
-
-
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: safari-${{ matrix.check }}
-          path: '*.png'
-
+      - run: python3 -m venv /tmp/meda-venv && /tmp/meda-venv/bin/pip install selenium
+      - run: sudo safaridriver --enable
+      - run: /tmp/meda-venv/bin/python remaining.py
+  iphone:
+    runs-on: macos-26
+    timeout-minutes: 12
+    steps:
+      - run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+          xcrun simctl help ui
+          xcrun simctl help accessibility || true
 
