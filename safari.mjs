@@ -17,9 +17,12 @@ try {
   for (const path of ["samples/annual-report.pdf", "samples/meeting-agenda.pdf", "staff/"]) {
     await visit(path);
     await voiceOver.clearSpokenPhraseLog();
-    for (let i = 0; i < (path.endsWith(".pdf") ? 35 : 12); i++) {
-      if (path.endsWith(".pdf")) await voiceOver.next();
-      else await voiceOver.nextHeading();
+    if (path.endsWith(".pdf")) {
+      await voiceOver.navigateNextUntil(/page 1 containing/i, { maxNavigationAttempts: 25 }).catch(console.error);
+      await voiceOver.interact();
+      for (let i = 0; i < 26; i++) await voiceOver.next();
+    } else {
+      await voiceOver.nextHeading();
     }
     const speech = await voiceOver.spokenPhraseLog();
     console.log(JSON.stringify({ path, speech }, null, 2));
@@ -27,17 +30,15 @@ try {
       await voiceOver.clearSpokenPhraseLog();
       // Safari page zoom advances through 115, 125, 150, 175, and 200.
       for (let i = 0; i < 5; i++) await voiceOver.press("Meta+Equals");
-      await voiceOver.navigateNextUntil(/edit and preview sample annual report/i, { maxNavigationAttempts: 60 });
-      await voiceOver.act();
-      await delay(600);
-      await voiceOver.press("Tab");
-      await voiceOver.press("Tab");
-      await voiceOver.press("ArrowUp");
-      await voiceOver.press("Escape");
-      await voiceOver.navigateNextUntil(/save draft/i, { maxNavigationAttempts: 40 });
-      await voiceOver.act();
-      await delay(1000);
-      for (let i = 0; i < 14; i++) await voiceOver.next();
+      for (let i = 0; i < 22; i++) {
+        await voiceOver.press("Alt+Tab");
+        const phrase = await voiceOver.lastSpokenPhrase();
+        if (/save draft/i.test(phrase)) {
+          await voiceOver.press("Space");
+          await delay(1000);
+          break;
+        }
+      }
       console.log(JSON.stringify({ formNavigation: await voiceOver.spokenPhraseLog() }, null, 2));
     }
     if (path === "staff/" && !speech.some(line => /staff publishing/i.test(line))) {
@@ -47,6 +48,7 @@ try {
 } finally {
   await voiceOver.stop();
 }
+
 
 
 
