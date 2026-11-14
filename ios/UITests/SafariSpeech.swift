@@ -12,7 +12,9 @@ final class SafariSpeech: XCTestCase {
     address.typeText("https://dev.blackhaven-industries.pages.dev/demo/meda/staff/\n")
     XCTAssertTrue(safari.staticTexts["Staff publishing"].waitForExistence(timeout: 25), safari.debugDescription)
     let voice = XCUIDevice.shared.voiceOverService
-    try voice.enable()
+    if !voice.isEnabled { try voice.enable() }
+    Thread.sleep(forTimeInterval: 3)
+    if let output = try? voice.currentSpeech() { print("IPHONE_VOICEOVER_INITIAL: " + output.utterance) }
     defer { try? voice.disable() }
     var speech: [String] = []
     for _ in 0..<55 {
@@ -26,4 +28,5 @@ final class SafariSpeech: XCTestCase {
     XCTAssertTrue(speech.joined(separator: "\n").localizedCaseInsensitiveContains("Staff publishing"))
   }
 }
+
 

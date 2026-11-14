@@ -17,12 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: |
-          XCODE=$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' | sort | tail -1)
+          XCODE=/Applications/Xcode_27.2.app
           test -n "$XCODE"
           sudo xcode-select -s "$XCODE/Contents/Developer"
           xcodebuild -version
           brew list xcodegen || brew install xcodegen
-          DEVICE=$(xcrun simctl list devices available -j | jq -r '[.devices | to_entries[] | select(.key | contains("iOS-27")) | .value[] | select(.name | startswith("iPhone"))][0].udid // empty')
+          DEVICE=$(xcrun simctl list devices available -j | jq -r '[.devices | to_entries[] | select(.key | endswith("iOS-27-2")) | .value[] | select(.name | startswith("iPhone"))][0].udid // empty')
           test -n "$DEVICE"
           xcrun simctl boot "$DEVICE"
           xcrun simctl bootstatus "$DEVICE" -b
@@ -30,5 +30,6 @@ jobs:
           cd ios
           xcodegen generate
           xcodebuild test -scheme SafariSpeech -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO
+
 
 
