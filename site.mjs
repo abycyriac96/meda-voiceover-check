@@ -76,6 +76,10 @@ try{
    } else if(process.env.CHECK==="community"){
     await click(/report an issue.*button|button.*report an issue/i);
     capture("community-form");
+    await seek(/category.*pop up/i);
+    await vo.press("Space");
+    await vo.press("ArrowDown");
+    await vo.press("Enter");
     await seek(/location/i);
     await vo.type("Audit test location");
     await seek(/description/i);
@@ -98,6 +102,7 @@ try{
  }
  assert.equal(failures.join("\n"),"");
 } finally { await vo.stop(); }
+
 
 
 

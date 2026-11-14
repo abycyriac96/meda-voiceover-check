@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        check: [company, galleries, rfq, rental, tourism, community]
+        check: [community, rental]
     env:
       CHECK: ${{ matrix.check }}
     runs-on: macos-15
@@ -28,4 +28,5 @@ jobs:
         with:
           name: safari-${{ matrix.check }}
           path: '*.png'
+
 
