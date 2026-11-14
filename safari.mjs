@@ -26,8 +26,9 @@ try {
     if (path === "staff/") {
       await voiceOver.clearSpokenPhraseLog();
       // Safari page zoom advances through 115, 125, 150, 175, and 200.
-      for (let i = 0; i < 5; i++) await voiceOver.press("Meta+=");
-      for (let i = 0; i < 24; i++) await voiceOver.press("Tab");
+      for (let i = 0; i < 5; i++) await voiceOver.press("Meta+Equals");
+      await voiceOver.navigateNextUntil(/document title/i, { maxNavigationAttempts: 35 });
+      for (let i = 0; i < 14; i++) await voiceOver.next();
       console.log(JSON.stringify({ formNavigation: await voiceOver.spokenPhraseLog() }, null, 2));
     }
     if (path === "staff/" && !speech.some(line => /staff publishing/i.test(line))) {
@@ -37,4 +38,6 @@ try {
 } finally {
   await voiceOver.stop();
 }
+
+
 
