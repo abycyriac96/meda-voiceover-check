@@ -41,7 +41,12 @@ try{
    }
    if(process.env.CHECK==="rental"){
     await seek(/month stepper/i);
-    for(let i=0;i<4;i++) await vo.press("Alt+Tab");
+    await seek(/month stepper/i);
+    const day = new Date().getDate();
+    if(day >= 28) throw Error("Use a date later than today in the same month");
+    await seek(/day stepper/i);
+    for(const digit of String(day+1).padStart(2,"0")) await vo.press("Digit"+digit);
+    await seek(/year stepper/i);
     await click(/save this request/i);
     capture("rental-saved");
     assert.match((await phrases()).join("\n"),/request saved/i);
@@ -49,6 +54,7 @@ try{
     await seek(/month stepper/i);
     for(let i=0;i<5;i++) await vo.press("Alt+Tab");
     capture("rfq-date");
+    await seek(/month stepper/i);
     await click(/prepare.*email/i);
     capture("rfq-validation");
    } else if(process.env.CHECK==="tourism"){
@@ -58,7 +64,19 @@ try{
    } else if(process.env.CHECK==="community"){
     await click(/report an issue.*button|button.*report an issue/i);
     capture("community-form");
-    for(let i=0;i<13;i++) await vo.press("Alt+Tab");
+    await seek(/location.*edit text|edit text.*location/i);
+    await vo.type("Audit test location");
+    await seek(/description.*edit text|edit text.*description/i);
+    await vo.type("Test request for Safari accessibility.");
+    await click(/create request/i);
+    assert.match((await phrases()).join("\n"),/request created/i);
+    await click(/track this request/i);
+    await click(/find request/i);
+    capture("community-tracking");
+    await click(/staff workspace/i);
+    await seek(/search requests/i);
+    await vo.type("Audit test location");
+    capture("community-filtered");
    } else {
     for(let i=0;i<(process.env.CHECK==="galleries"?15:10);i++) await vo.press("Alt+Tab");
     capture("route-"+index);
@@ -68,4 +86,5 @@ try{
  }
  assert.equal(failures.join("\n"),"");
 } finally { await vo.stop(); }
+
 
