@@ -50,6 +50,18 @@ try{
     await click(/save this request/i);
     capture("rental-saved");
     assert.match((await phrases()).join("\n"),/request saved/i);
+    await vo.press("Meta+r");
+    await wait(2400);
+    await seek(/month stepper/i);
+    await seek(/month stepper/i);
+    await seek(/day stepper/i);
+    for(const digit of String(day+7).padStart(2,"0")) await vo.press("Digit"+digit);
+    await seek(/year stepper/i);
+    await click(/save this request/i);
+    capture("rental-invalid-focus");
+    const feedback = (await phrases()).join("\n");
+    assert.match(feedback,/unavailable window/i);
+    assert.match(await vo.lastSpokenPhrase(),/stepper|return date|unavailable/i);
    } else if(process.env.CHECK==="rfq"){
     await seek(/month stepper/i);
     for(let i=0;i<5;i++) await vo.press("Alt+Tab");
@@ -64,9 +76,9 @@ try{
    } else if(process.env.CHECK==="community"){
     await click(/report an issue.*button|button.*report an issue/i);
     capture("community-form");
-    await seek(/location.*edit text|edit text.*location/i);
+    await seek(/location/i);
     await vo.type("Audit test location");
-    await seek(/description.*edit text|edit text.*description/i);
+    await seek(/description/i);
     await vo.type("Test request for Safari accessibility.");
     await click(/create request/i);
     assert.match((await phrases()).join("\n"),/request created/i);
@@ -86,5 +98,6 @@ try{
  }
  assert.equal(failures.join("\n"),"");
 } finally { await vo.stop(); }
+
 
 
